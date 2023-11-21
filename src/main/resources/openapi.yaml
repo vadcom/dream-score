@@ -1,0 +1,218 @@
+openapi: 3.0.3
+servers:
+  - url: http://sigma5.io/score/v3
+info:
+  version: "1.0"
+  title: API for score
+  description: API
+paths:
+  /{app}/sections:
+    get:
+      description: |-
+        Get list of section for app
+      parameters:
+        - name: app
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Section'          
+        '400':
+          description: Invalid status value
+  /{app}/{section}/user:
+    get:
+      description: Get recods with score for user
+      parameters: 
+        - name: app
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: section
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: user
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Jon Doe
+        - name: count
+          in: query
+          required: false
+          schema:
+            type: integer
+            maximum: 100
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Score'          
+        '400':
+          description: Invalid status value
+  /{app}/{section}/id/{id}:
+    get:
+      description: Get score around record with ID
+      parameters: 
+        - name: app
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: section
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            maximum: 100
+          example: 1
+        - name: count
+          in: query
+          required: false
+          schema:
+            type: integer
+            maximum: 100
+            default: 10
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Score'          
+        '400':
+          description: Invalid status value
+
+  /{app}/{section}:
+    get:
+      description: |-
+        Get top <count> records
+      parameters: 
+        - name: app
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: section
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: position
+          in: query
+          required: false
+          schema:
+            type: integer
+            maximum: 100
+            default: 1
+          example: 1
+        - name: count
+          in: query
+          required: false
+          example: 10
+          schema:
+            type: integer
+            maximum: 100
+            default: 10
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Score'          
+        '400':
+          description: Invalid status value
+    post:
+      parameters: 
+        - name: app
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: section
+          in: path
+          required: true
+          schema:
+            type: string
+      summary: Add a new score to the store
+      description: Add a new score to the store
+      operationId: newScore
+      requestBody:
+        description: Create a new score in the store
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Score'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                title: Ten records above and ten record after 
+                type: array
+                items:
+                  $ref: '#/components/schemas/Score'          
+        '405':
+          description: Invalid input
+components:
+  schemas:
+    Section:
+      type: object
+      properties:
+        id:
+          type: string
+          example: english-easy
+        name:
+          type: string
+          example: English with basic set
+    Score:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 256
+        position:
+          type: integer
+          example: 3
+        score:
+          type: integer
+          format: int64
+          example: 10
+        name:
+          type: string
+          example: Jon
+        date:
+          type: string
+          format: date-time
+        subscriotin:
+          title: Subscriptin to check
+          type: string
+          example: SDFRTSDERERFGKE
+
+  
