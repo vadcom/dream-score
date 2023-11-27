@@ -1,5 +1,6 @@
 package io.poleray.model;
 
+import java.util.Date;
 import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -16,7 +17,7 @@ import javax.validation.Valid;
 
 public class Score   {
   @JsonProperty("id")
-  private Integer id = null;
+  private String id = null;
 
   @JsonProperty("position")
   private Integer position = null;
@@ -28,12 +29,18 @@ public class Score   {
   private String name = null;
 
   @JsonProperty("date")
-  private OffsetDateTime date = null;
+  private Date date = null;
 
-  @JsonProperty("subscriotin")
-  private String subscriotin = null;
+  @JsonProperty("subscription")
+  private String subscription = null;
 
-  public Score id(Integer id) {
+  @JsonProperty("app")
+  private String app = null;
+
+  @JsonProperty("section")
+  private String section = null;
+
+  public Score id(String id) {
     this.id = id;
     return this;
   }
@@ -44,11 +51,11 @@ public class Score   {
    **/
   @Schema(example = "256", description = "")
   
-    public Integer getId() {
+    public String getId() {
     return id;
   }
 
-  public void setId(Integer id) {
+  public void setId(String id) {
     this.id = id;
   }
 
@@ -109,7 +116,7 @@ public class Score   {
     this.name = name;
   }
 
-  public Score date(OffsetDateTime date) {
+  public Score date(Date date) {
     this.date = date;
     return this;
   }
@@ -121,16 +128,16 @@ public class Score   {
   @Schema(description = "")
   
     @Valid
-    public OffsetDateTime getDate() {
+    public Date getDate() {
     return date;
   }
 
-  public void setDate(OffsetDateTime date) {
+  public void setDate(Date date) {
     this.date = date;
   }
 
   public Score subscriotin(String subscriotin) {
-    this.subscriotin = subscriotin;
+    this.subscription = subscriotin;
     return this;
   }
 
@@ -140,12 +147,12 @@ public class Score   {
    **/
   @Schema(example = "SDFRTSDERERFGKE", description = "")
   
-    public String getSubscriotin() {
-    return subscriotin;
+    public String getSubscription() {
+    return subscription;
   }
 
-  public void setSubscriotin(String subscriotin) {
-    this.subscriotin = subscriotin;
+  public void setSubscription(String subscription) {
+    this.subscription = subscription;
   }
 
 
@@ -163,12 +170,12 @@ public class Score   {
         Objects.equals(this.score, score.score) &&
         Objects.equals(this.name, score.name) &&
         Objects.equals(this.date, score.date) &&
-        Objects.equals(this.subscriotin, score.subscriotin);
+        Objects.equals(this.subscription, score.subscription);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, position, score, name, date, subscriotin);
+    return Objects.hash(id, position, score, name, date, subscription);
   }
 
   @Override
@@ -181,7 +188,7 @@ public class Score   {
     sb.append("    score: ").append(toIndentedString(score)).append("\n");
     sb.append("    name: ").append(toIndentedString(name)).append("\n");
     sb.append("    date: ").append(toIndentedString(date)).append("\n");
-    sb.append("    subscriotin: ").append(toIndentedString(subscriotin)).append("\n");
+    sb.append("    subscriotin: ").append(toIndentedString(subscription)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -195,5 +202,21 @@ public class Score   {
       return "null";
     }
     return o.toString().replace("\n", "\n    ");
+  }
+
+  public String getApp() {
+    return app;
+  }
+
+  public void setApp(String app) {
+    this.app = app;
+  }
+
+  public String getSection() {
+    return section;
+  }
+
+  public void setSection(String section) {
+    this.section = section;
   }
 }
