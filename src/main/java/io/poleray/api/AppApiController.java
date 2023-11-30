@@ -32,7 +32,7 @@ public class AppApiController implements AppApi {
     private final HttpServletRequest request;
 
     @Autowired
-    ScoreDAO ScoreDAO;
+    ScoreDAO scoreDAO;
 
     @org.springframework.beans.factory.annotation.Autowired
     public AppApiController(ObjectMapper objectMapper, HttpServletRequest request) {
@@ -47,7 +47,7 @@ public class AppApiController implements AppApi {
         String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
             try {
-                return new ResponseEntity<List<Score>>(ScoreDAO.getScoreBySection(app, section, position, count), HttpStatus.OK);
+                return new ResponseEntity<List<Score>>(scoreDAO.getScoreBySection(app, section, position, count), HttpStatus.OK);
             } catch (Exception e) {
                 log.error("Couldn't serialize response for content type application/json", e);
                 return new ResponseEntity<List<Score>>(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -56,19 +56,28 @@ public class AppApiController implements AppApi {
         return new ResponseEntity<List<Score>>(HttpStatus.NOT_IMPLEMENTED);
     }
 
-    public ResponseEntity<List<Score>> appSectionIdIdGet(@Parameter(in = ParameterIn.PATH, description = "", required=true, schema=@Schema()) @PathVariable("app") String app,@Parameter(in = ParameterIn.PATH, description = "", required=true, schema=@Schema()) @PathVariable("section") String section, @Max(100) @Parameter(in = ParameterIn.PATH, description = "", required=true, schema=@Schema(allowableValues={ "100" }, maximum="100"
-)) @PathVariable("id") Integer id, @Max(100) @Parameter(in = ParameterIn.QUERY, description = "" ,schema=@Schema(allowableValues={ "100" }, maximum="100"
-, defaultValue="10")) @Valid @RequestParam(value = "count", required = false, defaultValue="10") Integer count) {
+    /**
+     * Get score around record with id.
+     * Get upper and lower scores around record with id.
+     * @param app
+     * @param section
+     * @param id record id
+     * @param count number of records to return
+     * @return list of scores
+     */
+    public ResponseEntity<List<Score>> appSectionIdGet(@Parameter(in = ParameterIn.PATH, description = "", required=true, schema=@Schema()) @PathVariable("app") String app,
+                                                       @Parameter(in = ParameterIn.PATH, description = "", required=true, schema=@Schema()) @PathVariable("section") String section,
+                                                       @Max(100) @Parameter(in = ParameterIn.PATH, description = "", required=true, schema=@Schema()) @PathVariable("id") String id,
+                                                       @Max(100) @Parameter(in = ParameterIn.QUERY, description = "" ,schema=@Schema(allowableValues={ "100" }, maximum="100", defaultValue="10")) @Valid @RequestParam(value = "count", required = false, defaultValue="10") Integer count) {
         String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
             try {
-                return new ResponseEntity<List<Score>>(objectMapper.readValue("[ {\n  \"date\" : \"2000-01-23T04:56:07.000+00:00\",\n  \"score\" : 10,\n  \"subscriotin\" : \"SDFRTSDERERFGKE\",\n  \"name\" : \"Jon\",\n  \"id\" : 256,\n  \"position\" : 3\n}, {\n  \"date\" : \"2000-01-23T04:56:07.000+00:00\",\n  \"score\" : 10,\n  \"subscriotin\" : \"SDFRTSDERERFGKE\",\n  \"name\" : \"Jon\",\n  \"id\" : 256,\n  \"position\" : 3\n} ]", List.class), HttpStatus.NOT_IMPLEMENTED);
-            } catch (IOException e) {
+                return new ResponseEntity<List<Score>>(scoreDAO.getScoreById(app, section, id, count), HttpStatus.OK);
+            } catch (Exception e) {
                 log.error("Couldn't serialize response for content type application/json", e);
                 return new ResponseEntity<List<Score>>(HttpStatus.INTERNAL_SERVER_ERROR);
             }
         }
-
         return new ResponseEntity<List<Score>>(HttpStatus.NOT_IMPLEMENTED);
     }
 
@@ -107,8 +116,8 @@ public class AppApiController implements AppApi {
         String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
             try {
-                ScoreDAO.addScore(app,section,body);
-                return new ResponseEntity<List<Score>>(ScoreDAO.getScoreBySection(app, section, 1, 10), HttpStatus.OK);
+                scoreDAO.addScore(app,section,body);
+                return new ResponseEntity<List<Score>>(scoreDAO.getScoreBySection(app, section, 1, 10), HttpStatus.OK);
             } catch (Exception e) {
                 log.error("Couldn't serialize response for content type application/json", e);
                 return new ResponseEntity<List<Score>>(HttpStatus.INTERNAL_SERVER_ERROR);

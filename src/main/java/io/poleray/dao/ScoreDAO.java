@@ -11,7 +11,12 @@ import org.springframework.stereotype.Repository;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import java.util.Queue;
+import org.apache.commons.collections4.queue.CircularFifoQueue;
 
 @Repository
 public class ScoreDAO {
@@ -29,18 +34,22 @@ public class ScoreDAO {
         FindIterable<Document> documents = mongoClient.getDatabase(DREAMSCORE).getCollection(SCORE).find(query).sort(new Document("score", 1));
         documents.skip(position).limit(count);
         AtomicInteger aPos = new AtomicInteger(position);
-        return documents.into(new ArrayList<>()).stream().limit(count).map(document -> {
+        return documents.into(new ArrayList<>()).stream().limit(count).map(getMapper()).peek(score -> score.setPosition(aPos.getAndIncrement())).collect(Collectors.toList());
+    }
+
+    private static Function<Document, Score> getMapper() {
+        return document -> {
             Score score = new Score();
             score.setId(document.get("_id").toString());
             score.setName(document.getString("name"));
             score.setScore(document.getLong("score"));
             score.setDate(document.getDate("date"));
             score.setSubscription(document.getString("subscription"));
-            score.setSection(section);
-            score.setApp(app);
-            score.setPosition(aPos.getAndIncrement());
+            score.setSection(document.getString("section"));
+            score.setApp(document.getString("app"));
+            score.setPosition(document.getInteger("position"));
             return score;
-        }).collect(Collectors.toList());
+        };
     }
 
     private static Document getFilterQuery(String app, String section) {
@@ -61,4 +70,36 @@ public class ScoreDAO {
                 .insertOne(document, new InsertOneOptions().bypassDocumentValidation(true));
     }
 
+    /**
+     * Get score around record with id.
+     * Get upper and lower scores around record with id.
+     * @param app
+     * @param section
+     * @param id
+     * @param count
+     */
+    public List<Score> getScoreById(String app, String section, String id, Integer count) {
+        Document query = getFilterQuery(app, section);
+        FindIterable<Document> iterable = mongoClient.getDatabase(DREAMSCORE)
+                .getCollection(SCORE)
+                .find(query)
+                .sort(new Document("score", 1));
+        Queue<Document> queue = new CircularFifoQueue<>(count*2+1);
+        AtomicInteger limit = new AtomicInteger(-1);
+        AtomicInteger position = new AtomicInteger(0);
+        iterable.forEach(document -> {
+            position.getAndIncrement();
+            if (limit.get() <= count) {
+                document.put("position", position.get());
+                queue.add(document);
+                if (document.get("_id").toString().equals(id)) {
+                    limit.set(0);
+                }
+                if (limit.get() >= 0) {
+                    limit.getAndIncrement();
+                }
+            }
+        });
+        return queue.stream().map(getMapper()).collect(Collectors.toList());
+    }
 }
