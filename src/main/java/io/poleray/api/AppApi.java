@@ -52,9 +52,8 @@ public interface AppApi {
     @RequestMapping(value = "/{app}/{section}/id/{id}",
         produces = { "application/json" }, 
         method = RequestMethod.GET)
-    ResponseEntity<List<Score>> appSectionIdIdGet(@Parameter(in = ParameterIn.PATH, description = "", required=true, schema=@Schema()) @PathVariable("app") String app, @Parameter(in = ParameterIn.PATH, description = "", required=true, schema=@Schema()) @PathVariable("section") String section,  @Max(100) @Parameter(in = ParameterIn.PATH, description = "", required=true, schema=@Schema(allowableValues={ "100" }, maximum="100"
-)) @PathVariable("id") Integer id,  @Max(100) @Parameter(in = ParameterIn.QUERY, description = "" ,schema=@Schema(allowableValues={ "100" }, maximum="100"
-, defaultValue="10")) @Valid @RequestParam(value = "count", required = false, defaultValue="10") Integer count);
+    ResponseEntity<List<Score>> appSectionIdGet(@Parameter(in = ParameterIn.PATH, description = "", required=true, schema=@Schema()) @PathVariable("app") String app, @Parameter(in = ParameterIn.PATH, description = "", required=true, schema=@Schema()) @PathVariable("section") String section,  @Max(100) @Parameter(in = ParameterIn.PATH, description = "", required=true, schema=@Schema(allowableValues={ "100" }, maximum="100"
+)) @PathVariable("id") String id,  @Max(100) @Parameter(in = ParameterIn.QUERY, description = "" ,schema=@Schema()) @Valid @RequestParam(value = "count", required = false, defaultValue="10") Integer count);
 
 
     @Operation(summary = "", description = "Get recods with score for user", tags={  })
