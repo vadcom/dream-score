@@ -40,6 +40,10 @@ public class Score   {
   @JsonProperty("section")
   private String section = null;
 
+  @JsonProperty("selected")
+  private Boolean selected = false;
+
+
   public Score id(String id) {
     this.id = id;
     return this;
@@ -189,6 +193,9 @@ public class Score   {
     sb.append("    name: ").append(toIndentedString(name)).append("\n");
     sb.append("    date: ").append(toIndentedString(date)).append("\n");
     sb.append("    subscriotin: ").append(toIndentedString(subscription)).append("\n");
+    sb.append("    app: ").append(toIndentedString(app)).append("\n");
+    sb.append("    section: ").append(toIndentedString(section)).append("\n");
+    sb.append("    selected: ").append(toIndentedString(selected)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -219,4 +226,13 @@ public class Score   {
   public void setSection(String section) {
     this.section = section;
   }
+
+  public Boolean getSelected() {
+    return selected;
+  }
+
+  public void setSelected(Boolean selected) {
+    this.selected = selected;
+  }
+
 }

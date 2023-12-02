@@ -3,20 +3,18 @@ package io.poleray.dao;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoCursor;
 import com.mongodb.client.model.InsertOneOptions;
 import io.poleray.model.Score;
+import io.poleray.model.Section;
+import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.bson.Document;
 import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import java.util.Queue;
-import org.apache.commons.collections4.queue.CircularFifoQueue;
 
 @Repository
 public class ScoreDAO {
@@ -25,16 +23,12 @@ public class ScoreDAO {
     public static final String SCORE = "score";
     MongoClient mongoClient = MongoClients.create("mongodb://localhost:27017");
 
-    FindIterable<Document> getListOfScores(String section) {
-        return mongoClient.getDatabase(DREAMSCORE).getCollection(section).find();
-    }
-
     public List<Score> getScoreBySection(String app, String section, Integer position, Integer count) {
         Document query = getFilterQuery(app, section);
-        FindIterable<Document> documents = mongoClient.getDatabase(DREAMSCORE).getCollection(SCORE).find(query).sort(new Document("score", 1));
+        FindIterable<Document> documents = mongoClient.getDatabase(DREAMSCORE).getCollection(SCORE).find(query).sort(new Document("score", -1));
         documents.skip(position).limit(count);
         AtomicInteger aPos = new AtomicInteger(position);
-        return documents.into(new ArrayList<>()).stream().limit(count).map(getMapper()).peek(score -> score.setPosition(aPos.getAndIncrement())).collect(Collectors.toList());
+        return documents.into(new ArrayList<>()).stream().limit(count).map(getMapper()).peek(score -> score.setPosition(aPos.incrementAndGet())).collect(Collectors.toList());
     }
 
     private static Function<Document, Score> getMapper() {
@@ -48,6 +42,7 @@ public class ScoreDAO {
             score.setSection(document.getString("section"));
             score.setApp(document.getString("app"));
             score.setPosition(document.getInteger("position"));
+            score.setSelected(document.getBoolean("selected"));
             return score;
         };
     }
@@ -56,7 +51,7 @@ public class ScoreDAO {
         return Document.parse("{section: \"" + section + "\", app: \"" + app + "\"}");
     }
 
-    public void addScore(String app, String section, Score score) {
+    public String addScore(String app, String section, Score score) {
         Document document = new Document();
         document.append("name", score.getName());
         document.append("score", score.getScore());
@@ -65,9 +60,9 @@ public class ScoreDAO {
         document.append("position", score.getPosition());
         document.append("section", section);
         document.append("app", app);
-        mongoClient.getDatabase(DREAMSCORE)
+        return mongoClient.getDatabase(DREAMSCORE)
                 .getCollection(SCORE)
-                .insertOne(document, new InsertOneOptions().bypassDocumentValidation(true));
+                .insertOne(document, new InsertOneOptions().bypassDocumentValidation(true)).getInsertedId().asObjectId().getValue().toHexString();
     }
 
     /**
@@ -83,23 +78,63 @@ public class ScoreDAO {
         FindIterable<Document> iterable = mongoClient.getDatabase(DREAMSCORE)
                 .getCollection(SCORE)
                 .find(query)
-                .sort(new Document("score", 1));
+                .sort(new Document("score", -1));
         Queue<Document> queue = new CircularFifoQueue<>(count*2+1);
         AtomicInteger limit = new AtomicInteger(-1);
-        AtomicInteger position = new AtomicInteger(0);
+        AtomicInteger position = new AtomicInteger(1);
         iterable.forEach(document -> {
-            position.getAndIncrement();
             if (limit.get() <= count) {
-                document.put("position", position.get());
-                queue.add(document);
+                document.put("position", position.getAndIncrement());
                 if (document.get("_id").toString().equals(id)) {
                     limit.set(0);
+                    document.put("selected", true);
                 }
                 if (limit.get() >= 0) {
                     limit.getAndIncrement();
                 }
+                queue.add(document);
             }
         });
         return queue.stream().map(getMapper()).collect(Collectors.toList());
+    }
+
+    public List<Score> getUserScore(String app, String section, String user, String id, int count) {
+        Document query = getFilterQuery(app, section);
+        query.append("name", user);
+        FindIterable<Document> iterable = mongoClient.getDatabase(DREAMSCORE)
+                .getCollection(SCORE)
+                .find(query)
+                .sort(new Document("date", -1));
+        try (MongoCursor<Document> iterator = iterable.iterator()) {
+            if (id!=null) {
+                // Scip until we find the record with id
+                while (iterator.hasNext()) {
+                    Document document = iterator.next();
+                    if (document.get("_id").toString().equals(id)) {
+                        break;
+                    }
+                }
+            }
+            List<Score> scores = new ArrayList<>();
+            while (iterator.hasNext()) {
+                Document document = iterator.next();
+                scores.add(getMapper().apply(document));
+                if (count-- <= 0) {
+                    break;
+                }
+            }
+            return scores;
+        }
+    }
+
+    public List<Section> getAppSections(String app) {
+        Document query = new Document();
+        query.append("app", app);
+        FindIterable<Document> documents = mongoClient.getDatabase(DREAMSCORE).getCollection(SCORE).find(query);
+        Set<String> sections = new HashSet<>();
+        documents.forEach(document -> {
+            sections.add(document.getString("section"));
+        });
+        return sections.stream().map(section -> new Section().id(section).name(section)).collect(Collectors.toList());
     }
 }
