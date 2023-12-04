@@ -9,8 +9,10 @@ import io.poleray.model.Score;
 import io.poleray.model.Section;
 import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.bson.Document;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
+import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
@@ -19,13 +21,22 @@ import java.util.stream.Collectors;
 @Repository
 public class ScoreDAO {
 
-    public static final String DREAMSCORE = "dreamscore";
-    public static final String SCORE = "score";
-    MongoClient mongoClient = MongoClients.create("mongodb://localhost:27017");
+    public static final String DB_NAME = "dreamscore";
+    public static final String SCORE_COLLECTION = "score";
+
+    @Value("${spring.data.mongodb.uri}")
+    String connectionString;
+
+    MongoClient mongoClient;
+
+    @PostConstruct
+    void initDbConnection() {
+        mongoClient = MongoClients.create(connectionString);
+    }
 
     public List<Score> getScoreBySection(String app, String section, Integer position, Integer count) {
         Document query = getFilterQuery(app, section);
-        FindIterable<Document> documents = mongoClient.getDatabase(DREAMSCORE).getCollection(SCORE).find(query).sort(new Document("score", -1));
+        FindIterable<Document> documents = mongoClient.getDatabase(DB_NAME).getCollection(SCORE_COLLECTION).find(query).sort(new Document("score", -1));
         documents.skip(position).limit(count);
         AtomicInteger aPos = new AtomicInteger(position);
         return documents.into(new ArrayList<>()).stream().limit(count).map(getMapper()).peek(score -> score.setPosition(aPos.incrementAndGet())).collect(Collectors.toList());
@@ -60,8 +71,8 @@ public class ScoreDAO {
         document.append("position", score.getPosition());
         document.append("section", section);
         document.append("app", app);
-        return mongoClient.getDatabase(DREAMSCORE)
-                .getCollection(SCORE)
+        return mongoClient.getDatabase(DB_NAME)
+                .getCollection(SCORE_COLLECTION)
                 .insertOne(document, new InsertOneOptions().bypassDocumentValidation(true)).getInsertedId().asObjectId().getValue().toHexString();
     }
 
@@ -75,8 +86,8 @@ public class ScoreDAO {
      */
     public List<Score> getScoreById(String app, String section, String id, Integer count) {
         Document query = getFilterQuery(app, section);
-        FindIterable<Document> iterable = mongoClient.getDatabase(DREAMSCORE)
-                .getCollection(SCORE)
+        FindIterable<Document> iterable = mongoClient.getDatabase(DB_NAME)
+                .getCollection(SCORE_COLLECTION)
                 .find(query)
                 .sort(new Document("score", -1));
         Queue<Document> queue = new CircularFifoQueue<>(count*2+1);
@@ -101,8 +112,8 @@ public class ScoreDAO {
     public List<Score> getUserScore(String app, String section, String user, String id, int count) {
         Document query = getFilterQuery(app, section);
         query.append("name", user);
-        FindIterable<Document> iterable = mongoClient.getDatabase(DREAMSCORE)
-                .getCollection(SCORE)
+        FindIterable<Document> iterable = mongoClient.getDatabase(DB_NAME)
+                .getCollection(SCORE_COLLECTION)
                 .find(query)
                 .sort(new Document("date", -1));
         try (MongoCursor<Document> iterator = iterable.iterator()) {
@@ -130,7 +141,7 @@ public class ScoreDAO {
     public List<Section> getAppSections(String app) {
         Document query = new Document();
         query.append("app", app);
-        FindIterable<Document> documents = mongoClient.getDatabase(DREAMSCORE).getCollection(SCORE).find(query);
+        FindIterable<Document> documents = mongoClient.getDatabase(DB_NAME).getCollection(SCORE_COLLECTION).find(query);
         Set<String> sections = new HashSet<>();
         documents.forEach(document -> {
             sections.add(document.getString("section"));
