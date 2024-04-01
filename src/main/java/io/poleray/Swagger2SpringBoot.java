@@ -11,11 +11,11 @@ import org.springframework.context.annotation.ComponentScan;
 
 
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.format.FormatterRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
 @SpringBootApplication
-@ComponentScan(basePackages = { "io.poleray", "io.poleray.api" , "io.poleray.configuration"})
 public class Swagger2SpringBoot implements CommandLineRunner {
 
     @Override

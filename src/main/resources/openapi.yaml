@@ -1,6 +1,6 @@
 openapi: 3.0.3
 servers:
-  - url: http://sigma5.io/score/v3
+  - url: http://sigma5.link/score/v3
 info:
   version: "1.0"
   title: API for score
