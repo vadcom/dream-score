@@ -29,7 +29,7 @@ paths:
           description: Invalid status value
   /{app}/{section}/user:
     get:
-      description: Get recods with score for user
+      description: Get records with score for user
       parameters: 
         - name: app
           in: path
@@ -53,6 +53,11 @@ paths:
           schema:
             type: integer
             maximum: 100
+        - name: deviceID
+          in: query
+          required: false
+          schema:
+            type: string
       responses:
         '200':
           description: successful operation
@@ -92,6 +97,11 @@ paths:
             type: integer
             maximum: 100
             default: 10
+        - name: deviceID
+          in: query
+          required: false
+          schema:
+            type: string
       responses:
         '200':
           description: successful operation
@@ -135,6 +145,11 @@ paths:
             type: integer
             maximum: 100
             default: 10
+        - name: deviceID
+          in: query
+          required: false
+          schema:
+            type: string
       responses:
         '200':
           description: successful operation
@@ -156,6 +171,11 @@ paths:
         - name: section
           in: path
           required: true
+          schema:
+            type: string
+        - name: deviceID
+          in: query
+          required: false
           schema:
             type: string
       summary: Add a new score to the store
@@ -210,9 +230,12 @@ components:
         date:
           type: string
           format: date-time
-        subscriotin:
-          title: Subscriptin to check
+        subscription:
+          title: Subscription to check
           type: string
           example: SDFRTSDERERFGKE
+        deviceId:
+          title: Device for local score
+          type: string
 
   

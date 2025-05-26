@@ -29,19 +29,6 @@ public class ScoreDAO {
 
     MongoClient mongoClient;
 
-    @PostConstruct
-    void initDbConnection() {
-        mongoClient = MongoClients.create(connectionString);
-    }
-
-    public List<Score> getScoreBySection(String app, String section, Integer position, Integer count) {
-        Document query = getFilterQuery(app, section);
-        FindIterable<Document> documents = mongoClient.getDatabase(DB_NAME).getCollection(SCORE_COLLECTION).find(query).sort(new Document("score", -1));
-        documents.skip(position).limit(count);
-        AtomicInteger aPos = new AtomicInteger(position);
-        return documents.into(new ArrayList<>()).stream().limit(count).map(getMapper()).peek(score -> score.setPosition(aPos.incrementAndGet())).collect(Collectors.toList());
-    }
-
     private static Function<Document, Score> getMapper() {
         return document -> {
             Score score = new Score();
@@ -54,12 +41,27 @@ public class ScoreDAO {
             score.setApp(document.getString("app"));
             score.setPosition(document.getInteger("position"));
             score.setSelected(document.getBoolean("selected"));
+            score.setDeviceId(document.getString("deviceId"));
             return score;
         };
     }
 
-    private static Document getFilterQuery(String app, String section) {
-        return Document.parse("{section: \"" + section + "\", app: \"" + app + "\"}");
+    private static Document getFilterQuery(String app, String section, String deviceId) {
+        return deviceId == null ? Document.parse("{section: \"" + section + "\", app: \"" + app + "\"}")
+                : Document.parse("{section: \"" + section + "\", app: \"" + app + "\", deviceId: \"" + deviceId + "\"}");
+    }
+
+    @PostConstruct
+    void initDbConnection() {
+        mongoClient = MongoClients.create(connectionString);
+    }
+
+    public List<Score> getScoreBySection(String app, String section, Integer position, Integer count, String deviceId) {
+        Document query = getFilterQuery(app, section, deviceId);
+        FindIterable<Document> documents = mongoClient.getDatabase(DB_NAME).getCollection(SCORE_COLLECTION).find(query).sort(new Document("score", -1));
+        documents.skip(position).limit(count);
+        AtomicInteger aPos = new AtomicInteger(position);
+        return documents.into(new ArrayList<>()).stream().limit(count).map(getMapper()).peek(score -> score.setPosition(aPos.incrementAndGet())).collect(Collectors.toList());
     }
 
     public String addScore(String app, String section, Score score) {
@@ -71,6 +73,7 @@ public class ScoreDAO {
         document.append("position", score.getPosition());
         document.append("section", section);
         document.append("app", app);
+        document.append("deviceId", score.getDeviceId());
         return mongoClient.getDatabase(DB_NAME)
                 .getCollection(SCORE_COLLECTION)
                 .insertOne(document, new InsertOneOptions().bypassDocumentValidation(true)).getInsertedId().asObjectId().getValue().toHexString();
@@ -79,18 +82,19 @@ public class ScoreDAO {
     /**
      * Get score around record with id.
      * Get upper and lower scores around record with id.
+     *
      * @param app
      * @param section
      * @param id
      * @param count
      */
-    public List<Score> getScoreById(String app, String section, String id, Integer count) {
-        Document query = getFilterQuery(app, section);
+    public List<Score> getScoreById(String app, String section, String id, Integer count, String deviceId) {
+        Document query = getFilterQuery(app, section, deviceId);
         FindIterable<Document> iterable = mongoClient.getDatabase(DB_NAME)
                 .getCollection(SCORE_COLLECTION)
                 .find(query)
                 .sort(new Document("score", -1));
-        Queue<Document> queue = new CircularFifoQueue<>(count*2+1);
+        Queue<Document> queue = new CircularFifoQueue<>(count * 2 + 1);
         AtomicInteger limit = new AtomicInteger(-1);
         AtomicInteger position = new AtomicInteger(1);
         iterable.forEach(document -> {
@@ -117,7 +121,7 @@ public class ScoreDAO {
                 .find(query)
                 .sort(new Document("date", -1));
         try (MongoCursor<Document> iterator = iterable.iterator()) {
-            if (id!=null) {
+            if (id != null) {
                 // Scip until we find the record with id
                 while (iterator.hasNext()) {
                     Document document = iterator.next();

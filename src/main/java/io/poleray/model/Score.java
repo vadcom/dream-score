@@ -4,7 +4,6 @@ import java.util.Date;
 import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
-import org.threeten.bp.OffsetDateTime;
 import org.springframework.validation.annotation.Validated;
 import javax.validation.Valid;
 
@@ -43,18 +42,28 @@ public class Score   {
   @JsonProperty("selected")
   private Boolean selected = false;
 
+  @JsonProperty("deviceId")
+  private String deviceId = null;
 
   public Score id(String id) {
     this.id = id;
     return this;
   }
 
+  public Score setDeviceId(String deviceId) {
+    this.deviceId = deviceId;
+    return this;
+  }
+
+  public String getDeviceId() {
+    return deviceId;
+  }
   /**
    * Get id
    * @return id
    **/
   @Schema(example = "256", description = "")
-  
+
     public String getId() {
     return id;
   }
@@ -73,7 +82,7 @@ public class Score   {
    * @return position
    **/
   @Schema(example = "3", description = "")
-  
+
     public Integer getPosition() {
     return position;
   }
@@ -92,7 +101,7 @@ public class Score   {
    * @return score
    **/
   @Schema(example = "10", description = "")
-  
+
     public Long getScore() {
     return score;
   }
@@ -111,7 +120,7 @@ public class Score   {
    * @return name
    **/
   @Schema(example = "Jon", description = "")
-  
+
     public String getName() {
     return name;
   }
@@ -130,7 +139,7 @@ public class Score   {
    * @return date
    **/
   @Schema(description = "")
-  
+
     @Valid
     public Date getDate() {
     return date;
@@ -150,7 +159,7 @@ public class Score   {
    * @return subscriotin
    **/
   @Schema(example = "SDFRTSDERERFGKE", description = "")
-  
+
     public String getSubscription() {
     return subscription;
   }
@@ -168,25 +177,29 @@ public class Score   {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    Score score = (Score) o;
-    return Objects.equals(this.id, score.id) &&
-        Objects.equals(this.position, score.position) &&
-        Objects.equals(this.score, score.score) &&
-        Objects.equals(this.name, score.name) &&
-        Objects.equals(this.date, score.date) &&
-        Objects.equals(this.subscription, score.subscription);
+    Score scoreObject = (Score) o;
+    return Objects.equals(this.id, scoreObject.id) &&
+            Objects.equals(this.position, scoreObject.position) &&
+            Objects.equals(this.score, scoreObject.score) &&
+            Objects.equals(this.name, scoreObject.name) &&
+            Objects.equals(this.date, scoreObject.date) &&
+            Objects.equals(this.subscription, scoreObject.subscription) &&
+            Objects.equals(this.deviceId, scoreObject.deviceId) &&
+            Objects.equals(this.app, scoreObject.app) &&
+            Objects.equals(this.section, scoreObject.section) &&
+            Objects.equals(this.selected, scoreObject.selected);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, position, score, name, date, subscription);
+    return Objects.hash(id, position, score, name, date, subscription, deviceId, app, section, selected);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class Score {\n");
-    
+
     sb.append("    id: ").append(toIndentedString(id)).append("\n");
     sb.append("    position: ").append(toIndentedString(position)).append("\n");
     sb.append("    score: ").append(toIndentedString(score)).append("\n");
@@ -195,6 +208,7 @@ public class Score   {
     sb.append("    subscriotin: ").append(toIndentedString(subscription)).append("\n");
     sb.append("    app: ").append(toIndentedString(app)).append("\n");
     sb.append("    section: ").append(toIndentedString(section)).append("\n");
+    sb.append("    deviceId: ").append(toIndentedString(deviceId)).append("\n");
     sb.append("    selected: ").append(toIndentedString(selected)).append("\n");
     sb.append("}");
     return sb.toString();
