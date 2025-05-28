@@ -8,6 +8,7 @@ import com.mongodb.client.model.InsertOneOptions;
 import io.poleray.model.Score;
 import io.poleray.model.Section;
 import org.apache.commons.collections4.queue.CircularFifoQueue;
+import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
@@ -47,7 +48,7 @@ public class ScoreDAO {
     }
 
     private static Document getFilterQuery(String app, String section, String deviceId) {
-        return deviceId == null ? Document.parse("{section: \"" + section + "\", app: \"" + app + "\"}")
+        return StringUtils.isEmpty(deviceId) ? Document.parse("{section: \"" + section + "\", app: \"" + app + "\"}")
                 : Document.parse("{section: \"" + section + "\", app: \"" + app + "\", deviceId: \"" + deviceId + "\"}");
     }
 
@@ -113,8 +114,8 @@ public class ScoreDAO {
         return queue.stream().map(getMapper()).collect(Collectors.toList());
     }
 
-    public List<Score> getUserScore(String app, String section, String user, String id, int count) {
-        Document query = getFilterQuery(app, section);
+    public List<Score> getUserScore(String app, String section, String user, String id, int count, String deviceId) {
+        Document query = getFilterQuery(app, section, deviceId);
         query.append("name", user);
         FindIterable<Document> iterable = mongoClient.getDatabase(DB_NAME)
                 .getCollection(SCORE_COLLECTION)
