@@ -117,12 +117,13 @@ public class AppApiController implements AppApi {
 
     public ResponseEntity<List<Score>> newScore(@Parameter(in = ParameterIn.PATH, description = "", required=true, schema=@Schema()) @PathVariable("app") String app,
                                                 @Parameter(in = ParameterIn.PATH, description = "", required=true, schema=@Schema()) @PathVariable("section") String section,
-                                                @Parameter(in = ParameterIn.DEFAULT, description = "Create a new score in the store", required=true, schema=@Schema()) @Valid @RequestBody Score body) {
+                                                @Parameter(in = ParameterIn.DEFAULT, description = "Create a new score in the store", required=true, schema=@Schema()) @Valid @RequestBody Score body,
+                                                @Parameter(in = ParameterIn.QUERY, description = "Device Identificator for local score", name = "deviceId", required=false)  String deviceId) {
         String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
             try {
                 String id = scoreDAO.addScore(app, section, body);
-                return new ResponseEntity<List<Score>>(scoreDAO.getScoreById(app, section, id, 10, body.getDeviceId()), HttpStatus.OK);
+                return new ResponseEntity<List<Score>>(scoreDAO.getScoreById(app, section, id, 10, deviceId), HttpStatus.OK);
             } catch (Exception e) {
                 log.error("Couldn't serialize response for content type application/json", e);
                 return new ResponseEntity<List<Score>>(HttpStatus.INTERNAL_SERVER_ERROR);

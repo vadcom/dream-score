@@ -99,7 +99,8 @@ public interface AppApi {
         method = RequestMethod.POST)
     ResponseEntity<List<Score>> newScore(@Parameter(in = ParameterIn.PATH, description = "", required=true, schema=@Schema()) @PathVariable("app") String app,
                                          @Parameter(in = ParameterIn.PATH, description = "", required=true, schema=@Schema()) @PathVariable("section") String section,
-                                         @Parameter(in = ParameterIn.DEFAULT, description = "Create a new score in the store", required=true, schema=@Schema()) @Valid @RequestBody Score body);
+                                         @Parameter(in = ParameterIn.DEFAULT, description = "Create a new score in the store", required=true, schema=@Schema()) @Valid @RequestBody Score body,
+                                         @Parameter(in = ParameterIn.QUERY, description = "Device Identificator for local score", name = "deviceId", required=false)  String deviceId);
 
 }
 
