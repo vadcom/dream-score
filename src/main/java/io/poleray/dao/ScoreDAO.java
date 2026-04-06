@@ -48,8 +48,11 @@ public class ScoreDAO {
     }
 
     private static Document getFilterQuery(String app, String section, String deviceId) {
-        return StringUtils.isEmpty(deviceId) ? Document.parse("{section: \"" + section + "\", app: \"" + app + "\"}")
-                : Document.parse("{section: \"" + section + "\", app: \"" + app + "\", deviceId: \"" + deviceId + "\"}");
+        Document query = new Document("section", section).append("app", app);
+        if (!StringUtils.isEmpty(deviceId)) {
+            query.append("deviceId", deviceId);
+        }
+        return query;
     }
 
     @PostConstruct
