@@ -1,15 +1,16 @@
 openapi: 3.0.3
 servers:
-  - url: http://sigma5.link/score/v3
+  - url: http://dreamscore.sigma5.link:8080/score/v3
 info:
-  version: "1.0"
+  version: "1.1.1"
   title: API for score
   description: API
+security:
+  - ApiTokenAuth: []
 paths:
   /{app}/sections:
     get:
-      description: |-
-        Get list of section for app
+      description: Get list of section for app
       parameters:
         - name: app
           in: path
@@ -24,13 +25,13 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Section'          
+                  $ref: '#/components/schemas/Section'
         '400':
           description: Invalid status value
   /{app}/{section}/user:
     get:
       description: Get records with score for user
-      parameters: 
+      parameters:
         - name: app
           in: path
           required: true
@@ -47,15 +48,22 @@ paths:
           schema:
             type: string
             example: Jon Doe
+        - name: id
+          in: query
+          required: false
+          description: Get records after this ID (cursor pagination)
+          schema:
+            type: string
         - name: count
           in: query
           required: false
           schema:
             type: integer
             maximum: 100
-        - name: deviceID
+        - name: deviceId
           in: query
           required: false
+          description: Device identifier for local score
           schema:
             type: string
       responses:
@@ -66,13 +74,13 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Score'          
+                  $ref: '#/components/schemas/Score'
         '400':
           description: Invalid status value
   /{app}/{section}/id/{id}:
     get:
       description: Get score around record with ID
-      parameters: 
+      parameters:
         - name: app
           in: path
           required: true
@@ -87,9 +95,8 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
-            maximum: 100
-          example: 1
+            type: string
+          example: "507f1f77bcf86cd799439011"
         - name: count
           in: query
           required: false
@@ -97,9 +104,10 @@ paths:
             type: integer
             maximum: 100
             default: 10
-        - name: deviceID
+        - name: deviceId
           in: query
           required: false
+          description: Device identifier for local score
           schema:
             type: string
       responses:
@@ -110,15 +118,13 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Score'          
+                  $ref: '#/components/schemas/Score'
         '400':
           description: Invalid status value
-
   /{app}/{section}:
     get:
-      description: |-
-        Get top <count> records
-      parameters: 
+      description: Get top <count> records
+      parameters:
         - name: app
           in: path
           required: true
@@ -129,14 +135,13 @@ paths:
           required: true
           schema:
             type: string
-        - name: position
+        - name: positionToSkip
           in: query
           required: false
           schema:
             type: integer
-            maximum: 100
-            default: 1
-          example: 1
+            default: 0
+          example: 0
         - name: count
           in: query
           required: false
@@ -145,9 +150,10 @@ paths:
             type: integer
             maximum: 100
             default: 10
-        - name: deviceID
+        - name: deviceId
           in: query
           required: false
+          description: Device identifier for local score
           schema:
             type: string
       responses:
@@ -158,11 +164,11 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Score'          
+                  $ref: '#/components/schemas/Score'
         '400':
           description: Invalid status value
     post:
-      parameters: 
+      parameters:
         - name: app
           in: path
           required: true
@@ -173,9 +179,10 @@ paths:
           required: true
           schema:
             type: string
-        - name: deviceID
+        - name: deviceId
           in: query
           required: false
+          description: Device identifier for local score
           schema:
             type: string
       summary: Add a new score to the store
@@ -194,13 +201,18 @@ paths:
           content:
             application/json:
               schema:
-                title: Ten records above and ten record after 
+                title: Scores around the newly added record
                 type: array
                 items:
-                  $ref: '#/components/schemas/Score'          
+                  $ref: '#/components/schemas/Score'
         '405':
           description: Invalid input
 components:
+  securitySchemes:
+    ApiTokenAuth:
+      type: apiKey
+      in: header
+      name: X-Api-Token
   schemas:
     Section:
       type: object
@@ -215,8 +227,8 @@ components:
       type: object
       properties:
         id:
-          type: integer
-          example: 256
+          type: string
+          example: "507f1f77bcf86cd799439011"
         position:
           type: integer
           example: 3
@@ -234,8 +246,13 @@ components:
           title: Subscription to check
           type: string
           example: SDFRTSDERERFGKE
+        app:
+          type: string
+        section:
+          type: string
+        selected:
+          type: boolean
+          default: false
         deviceId:
           title: Device for local score
           type: string
-
-  
