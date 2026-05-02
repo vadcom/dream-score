@@ -43,6 +43,7 @@ public class ScoreDAO {
             score.setPosition(document.getInteger("position"));
             score.setSelected(document.getBoolean("selected"));
             score.setDeviceId(document.getString("deviceId"));
+            score.setLevels(document.getInteger("levels"));
             return score;
         };
     }
@@ -78,6 +79,7 @@ public class ScoreDAO {
         document.append("section", section);
         document.append("app", app);
         document.append("deviceId", score.getDeviceId());
+        document.append("levels", score.getLevels());
         return mongoClient.getDatabase(DB_NAME)
                 .getCollection(SCORE_COLLECTION)
                 .insertOne(document, new InsertOneOptions().bypassDocumentValidation(true)).getInsertedId().asObjectId().getValue().toHexString();
